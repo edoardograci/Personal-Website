@@ -1,0 +1,84 @@
+[build]
+  publish = "dist"
+  functions = "netlify/functions"
+
+[[redirects]]
+  from = "/googled62cfa8a69356555.html"
+  to = "/verification/googled62cfa8a69356555.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/favicon.ico"
+  to = "/favicon.ico"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/sitemap.xml"
+  to = "/sitemap.xml"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/robots.txt"
+  to = "/robots.txt"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/*"
+  to = "/.netlify/functions/rewrite-html"
+  status = 200
+  force = true
+
+# Serve 404.html for invalid pages
+[[redirects]]
+  from = "/*"
+  to = "/404.html"
+  status = 404
+  force = false
+
+[[headers]]
+  for = "/assets/favicon.ico"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+    Content-Type = "image/x-icon"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Robots-Tag = "index, follow"  # Ensure edoardograci.com is indexed
+    Link = "<https://edoardograci.com>; rel=\"canonical\""  # Canonical URL for SEO
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-OG-Title = "Edoardo Graci"
+    X-OG-Description = "Edoardo Graci is a young italian designer from Milan."
+    X-OG-Image = "https://edoardograci.com/og-image.jpg"
+    X-OG-URL = "https://edoardograci.com"
+    X-Twitter-Card = "summary_large_image"
+    X-Twitter-Title = "Edoardo Graci"
+    X-Twitter-Description = "Edoardo Graci is a young italian designer from Milan."
+    X-Twitter-Image = "https://edoardograci.com/twitter-image.jpg"
+
+[[headers]]
+  for = "/sitemap.xml"
+  [headers.values]
+    Content-Type = "application/xml"
+
+[[headers]]
+  for = "/robots.txt"
+  [headers.values]
+    Content-Type = "text/plain"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
+    Pragma = "public"

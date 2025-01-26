@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Disallow: /work/work
+Disallow: /work/*
+Disallow: /*/work
+Disallow: /private/
+Disallow: /admin/
+
+Sitemap: https://edoardograci.com/sitemap.xml
+
+# Prevent indexing of Framer app
+User-agent: *
+Disallow: https://charismatic-everyone-653587.framer.app/
