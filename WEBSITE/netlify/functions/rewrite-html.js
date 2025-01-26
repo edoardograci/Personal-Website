@@ -1,7 +1,11 @@
 exports.handler = async (event, context) => {
   try {
+    // Construct the URL to fetch based on the requested path
+    const path = event.path === "/" ? "/" : event.path; // Handle root and other paths
+    const framerUrl = `https://charismatic-everyone-653587.framer.app${path}`;
+
     // Fetch the HTML from the Framer app
-    const response = await fetch("https://charismatic-everyone-653587.framer.app/");
+    const response = await fetch(framerUrl);
     let html = await response.text();
 
     // Remove the noindex meta tag
