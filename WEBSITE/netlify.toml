@@ -2,34 +2,25 @@
   publish = "WEBSITE/dist"
   functions = "WEBSITE/netlify/functions"
 
+# Route the root URL to the function
 [[redirects]]
-  from = "/googled62cfa8a69356555.html"
-  to = "/verification/googled62cfa8a69356555.html"
+  from = "/"
+  to = "/.netlify/functions/rewrite-html"
   status = 200
   force = true
 
-[[redirects]]
-  from = "/favicon.ico"
-  to = "/favicon.ico"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/sitemap.xml"
-  to = "/sitemap.xml"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/robots.txt"
-  to = "/robots.txt"
-  status = 200
-  force = true
-
-# Route all traffic to the function
+# Route all other paths to the function (except static assets)
 [[redirects]]
   from = "/*"
   to = "/.netlify/functions/rewrite-html"
+  status = 200
+  force = true
+  conditions = {Path = ["!assets/*", "!favicon.ico", "!sitemap.xml", "!robots.txt"]}  # <-- Exclude static assets
+
+# Serve static assets directly
+[[redirects]]
+  from = "/assets/*"
+  to = "/assets/:splat"
   status = 200
   force = true
 
