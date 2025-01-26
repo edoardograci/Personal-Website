@@ -7,6 +7,9 @@ exports.handler = async (event, context) => {
     // Remove the noindex meta tag
     html = html.replace(/<meta\s+name=["']robots["']\s+content=["']noindex["']\s*\/?>/gi, "");
 
+    // Remove the Framer analytics script
+    html = html.replace(/<script\s+async\s+src="https:\/\/events\.framer\.com\/script".*?<\/script>/gi, "");
+
     // Return the modified HTML with headers
     return {
       statusCode: 200,
