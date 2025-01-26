@@ -14,6 +14,7 @@ export default async (req, res) => {
     // Return the modified HTML
     res.status(200).send(html);
   } catch (error) {
-    res.status(500).send("Error fetching or modifying HTML");
+    // Return a JSON error response
+    res.status(500).json({ error: "Error fetching or modifying HTML" });
   }
 };
