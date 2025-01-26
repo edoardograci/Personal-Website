@@ -26,6 +26,7 @@
   status = 200
   force = true
 
+# Route all traffic to the function
 [[redirects]]
   from = "/*"
   to = "/.netlify/functions/rewrite-html"
@@ -48,8 +49,8 @@
 [[headers]]
   for = "/*"
   [headers.values]
-    X-Robots-Tag = "index, follow"  # Ensure edoardograci.com is indexed
-    Link = "<https://edoardograci.com>; rel=\"canonical\""  # Canonical URL for SEO
+    X-Robots-Tag = "index, follow"
+    Link = "<https://edoardograci.com>; rel=\"canonical\""
     X-Frame-Options = "SAMEORIGIN"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
