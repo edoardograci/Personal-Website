@@ -5,7 +5,7 @@ exports.handler = async (event, context) => {
     let html = await response.text();
 
     // Remove the noindex meta tag
-    html = html.replace(/<meta name="robots" content="noindex">/g, "");
+    html = html.replace(/<meta\s+name="robots"\s+content="noindex"\s*\/?>/gi, "");
 
     // Return the modified HTML with headers
     return {
