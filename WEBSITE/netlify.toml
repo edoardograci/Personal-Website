@@ -2,20 +2,13 @@
   publish = "WEBSITE/dist"
   functions = "WEBSITE/netlify/functions"
 
-# Route the root URL to the function
-[[redirects]]
-  from = "/"
-  to = "/.netlify/functions/rewrite-html"
-  status = 200
-  force = true
-
-# Route all other paths to the function (except static assets)
+# Route all non-static paths to the rewrite-html function
 [[redirects]]
   from = "/*"
   to = "/.netlify/functions/rewrite-html"
   status = 200
   force = true
-  conditions = {Path = ["!assets/*", "!favicon.ico", "!sitemap.xml", "!robots.txt"]}  # <-- Exclude static assets
+  conditions = {Path = ["!assets/*", "!favicon.ico", "!sitemap.xml", "!robots.txt"]}  # Exclude static assets
 
 # Serve static assets directly
 [[redirects]]
