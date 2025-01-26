@@ -1,6 +1,6 @@
 [build]
-  publish = "dist"
-  functions = "netlify/functions"
+  publish = "WEBSITE/dist"
+  functions = "WEBSITE/netlify/functions"
 
 [[redirects]]
   from = "/googled62cfa8a69356555.html"
