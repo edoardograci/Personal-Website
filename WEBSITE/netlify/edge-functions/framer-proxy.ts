@@ -1,5 +1,5 @@
 // framer-proxy.ts
-export default async (request: Request) => {
+exports.handler = default async (request: Request) => {
   try {
     const url = new URL(request.url);
     const path = url.pathname;
