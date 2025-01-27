@@ -1,11 +1,7 @@
-exports.handler = async (request: Request) => {
+exports.handler = async (request: any) => {
   try {
-    // Construct the full URL if `request.url` is undefined
-    const host = request.headers.get("host");
-    if (!host) {
-      throw new Error("Host header is missing");
-    }
-
+    // Construct the full URL manually
+    const host = request.headers["host"] || "edoardograci.com";
     const fullUrl = `https://${host}${request.url || ""}`;
     const url = new URL(fullUrl);
 
@@ -15,10 +11,8 @@ exports.handler = async (request: Request) => {
     // Construct Framer URL
     const framerUrl = `https://charismatic-everyone-653587.framer.app${path}`;
 
-    // Clone the original request headers
-    const headers = new Headers(request.headers);
-
     // Override headers to bypass Framer's bot detection
+    const headers = new Headers();
     headers.set(
       "User-Agent",
       "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
