@@ -2,7 +2,7 @@
   publish = "WEBSITE/dist"
   functions = "WEBSITE/netlify/functions"
 
-# Rewrite ALL requests to the function (invisibly)
+# Rewrite ALL paths to the function (invisibly)
 [[redirects]]
   from = "/*"
   to = "/.netlify/functions/rewrite-html"
@@ -11,7 +11,7 @@
   conditions = {
     Path = [
       "!/assets/*",
-      "!/.netlify/functions/*", # Prevent loops
+      "!/.netlify/functions/*",  # Prevent redirect loops
       "!/favicon.ico",
       "!/sitemap.xml",
       "!/robots.txt",
