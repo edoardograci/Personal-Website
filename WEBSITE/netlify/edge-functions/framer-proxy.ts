@@ -1,6 +1,13 @@
 exports.handler = async (request: Request) => {
   try {
-    const url = new URL(request.url);
+    // Construct the full URL if `request.url` is undefined
+    const host = request.headers.get("host");
+    if (!host) {
+      throw new Error("Host header is missing");
+    }
+
+    const fullUrl = `https://${host}${request.url || ""}`;
+    const url = new URL(fullUrl);
 
     // Remove Edge Function prefix from the path
     const path = url.pathname.replace("/.netlify/functions/framer-proxy", "");
@@ -12,7 +19,10 @@ exports.handler = async (request: Request) => {
     const headers = new Headers(request.headers);
 
     // Override headers to bypass Framer's bot detection
-    headers.set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36");
+    headers.set(
+      "User-Agent",
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
+    );
     headers.set("Referer", "https://edoardograci.com/");
 
     // Fetch Framer's page
