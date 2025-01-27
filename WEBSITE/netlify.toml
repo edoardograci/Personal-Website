@@ -14,10 +14,10 @@
   force = false
   
 [[redirects]]
-  from = "/*"
-  to = "/"
-  status = 200
-  force = false
+from = "/*"
+to = "/.netlify/edge-functions/framer-proxy"
+status = 200
+force = true
   
 # Headers (unchanged)
 [[headers]]
