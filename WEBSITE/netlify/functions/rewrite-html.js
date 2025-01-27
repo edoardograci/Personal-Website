@@ -1,7 +1,7 @@
 exports.handler = async (event, context) => {
   try {
     // Handle root path and decode URI
-    const path = event.path === "/.netlify/functions/rewrite-html" ? "/" : decodeURI(event.path);
+    const path = decodeURI(event.path);
     const framerUrl = `https://charismatic-everyone-653587.framer.app${path}`;
 
     // Mimic a browser request to bypass Framer's bot detection
