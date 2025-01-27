@@ -20,6 +20,7 @@ exports.handler = async (event, context) => {
     const response = await fetch(framerUrl, { headers });
 
     if (response.status === 404) {
+      console.log(`Proxied URL: ${framerUrl}, Status: ${response.status}`);
       return {
         statusCode: 404,
         body: "Not Found",
