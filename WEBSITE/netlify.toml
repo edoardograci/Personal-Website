@@ -2,7 +2,7 @@
   publish = "WEBSITE/dist"
   functions = "WEBSITE/netlify/functions"
 
-# Proxy non-static requests to the function (clean URLs)
+# Rewrite all HTML requests to the function (invisibly)
 [[redirects]]
   from = "/*"
   to = "/.netlify/functions/rewrite-html"
@@ -10,17 +10,17 @@
   force = true
   conditions = {
     Path = [
-      "!/assets/*",
-      "!/.netlify/functions/*",  # Exclude function path
-      "!/favicon.ico",
-      "!/sitemap.xml",
-      "!/robots.txt",
-      "!/site.webmanifest",
-      "!/verification/*"
+      "!/assets/*",               # Exclude static assets
+      "!/.netlify/functions/*",   # Avoid redirecting the function itself
+      "!/favicon.ico",            # Exclude favicon
+      "!/sitemap.xml",            # Exclude sitemap
+      "!/robots.txt",             # Exclude robots.txt
+      "!/site.webmanifest",       # Exclude web manifest
+      "!/verification/*"          # Exclude verification files
     ]
   }
 
-# Serve static assets
+# Serve static assets directly
 [[redirects]]
   from = "/assets/*"
   to = "/assets/:splat"
@@ -34,7 +34,7 @@
   status = 404
   force = false
 
-# Consolidated headers
+# Consolidated headers for all pages
 [[headers]]
   for = "/*"
   [headers.values]
@@ -45,12 +45,21 @@
     Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
     Cache-Control = "public, max-age=3600"
 
+# Headers for sitemap.xml
 [[headers]]
   for = "/sitemap.xml"
   [headers.values]
     Content-Type = "application/xml"
 
+# Headers for robots.txt
 [[headers]]
   for = "/robots.txt"
   [headers.values]
     Content-Type = "text/plain"
+
+# Headers for favicon.ico
+[[headers]]
+  for = "/assets/favicon.ico"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+    Content-Type = "image/x-icon"
