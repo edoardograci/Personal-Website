@@ -5,9 +5,6 @@ Disallow: /work/*
 Disallow: /*/work
 Disallow: /private/
 Disallow: /admin/
+Disallow: /framer-app/  # Block Framer proxy path if used
 
 Sitemap: https://edoardograci.com/sitemap.xml
-
-# Prevent indexing of Framer app
-User-agent: *
-Disallow: https://charismatic-everyone-653587.framer.app/
