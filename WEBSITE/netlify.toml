@@ -2,55 +2,47 @@
   publish = "WEBSITE/dist"
   functions = "WEBSITE/netlify/functions"
 
-# Route all non-static paths to the rewrite-html function
+# Proxy all non-static requests to the function (clean URLs)
 [[redirects]]
   from = "/*"
   to = "/.netlify/functions/rewrite-html"
   status = 200
   force = true
-  conditions = {Path = ["!assets/*", "!favicon.ico", "!sitemap.xml", "!robots.txt"]}  # Exclude static assets
+  conditions = {
+    Path = [
+      "!/assets/*",
+      "!/favicon.ico",
+      "!/sitemap.xml",
+      "!/robots.txt",
+      "!/site.webmanifest",
+      "!/verification/*"
+    ]
+  }
 
-# Serve static assets directly
+# Serve static assets
 [[redirects]]
   from = "/assets/*"
   to = "/assets/:splat"
   status = 200
   force = true
 
-# Serve 404.html for invalid pages
+# 404 handling
 [[redirects]]
   from = "/*"
   to = "/404.html"
   status = 404
   force = false
 
-[[headers]]
-  for = "/assets/favicon.ico"
-  [headers.values]
-    Cache-Control = "public, max-age=86400"
-    Content-Type = "image/x-icon"
-
+# Headers (consolidated)
 [[headers]]
   for = "/*"
   [headers.values]
     X-Robots-Tag = "index, follow"
-    Link = "<https://edoardograci.com>; rel=\"canonical\""
     X-Frame-Options = "SAMEORIGIN"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
-
-[[headers]]
-  for = "/*"
-  [headers.values]
-    X-OG-Title = "Edoardo Graci"
-    X-OG-Description = "Edoardo Graci is a young italian designer from Milan."
-    X-OG-Image = "https://edoardograci.com/og-image.jpg"
-    X-OG-URL = "https://edoardograci.com"
-    X-Twitter-Card = "summary_large_image"
-    X-Twitter-Title = "Edoardo Graci"
-    X-Twitter-Description = "Edoardo Graci is a young italian designer from Milan."
-    X-Twitter-Image = "https://edoardograci.com/twitter-image.jpg"
+    Cache-Control = "public, max-age=3600"
 
 [[headers]]
   for = "/sitemap.xml"
@@ -61,9 +53,3 @@
   for = "/robots.txt"
   [headers.values]
     Content-Type = "text/plain"
-
-[[headers]]
-  for = "/*"
-  [headers.values]
-    Cache-Control = "public, max-age=3600"
-    Pragma = "public"
