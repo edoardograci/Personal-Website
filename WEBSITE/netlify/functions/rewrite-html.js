@@ -2,11 +2,19 @@ exports.handler = async (event, context) => {
   try {
     // Decode path to handle special characters
     const path = decodeURI(event.path);
-    const framerUrl = `https://charismatic-everyone-653587.framer.app${path}`;
+    // Ensure root path ("/") is correctly handled
+    const framerPath = path === "/.netlify/functions/rewrite-html" ? "/" : path;
+    const framerUrl = `https://charismatic-everyone-653587.framer.app${framerPath}`;
 
-    const response = await fetch(framerUrl);
+    // Forward headers to mimic a real browser request
+    const headers = {
+      'User-Agent': event.headers['user-agent'] || 'Mozilla/5.0 (compatible; Netlify)',
+      'Accept': event.headers['accept'] || 'text/html',
+    };
 
-    // Handle Framer 404s
+    const response = await fetch(framerUrl, { headers });
+
+    // Handle Framer 404s by redirecting to Netlify's 404.html
     if (response.status === 404) {
       return { statusCode: 404, body: 'Not Found' };
     }
@@ -24,6 +32,7 @@ exports.handler = async (event, context) => {
       body: html,
     };
   } catch (error) {
+    console.error('Error:', error);
     return { statusCode: 500, body: "Internal Server Error" };
   }
 };
