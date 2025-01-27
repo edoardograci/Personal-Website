@@ -1,33 +1,29 @@
 exports.handler = async (event, context) => {
   try {
-    // Construct the URL to fetch based on the requested path
-    const path = event.path === "/" ? "/" : event.path; // Handle root and other paths
+    // Decode path to handle special characters
+    const path = decodeURI(event.path);
     const framerUrl = `https://charismatic-everyone-653587.framer.app${path}`;
 
-    // Fetch the HTML from the Framer app
     const response = await fetch(framerUrl);
+
+    // Handle Framer 404s
+    if (response.status === 404) {
+      return { statusCode: 404, body: 'Not Found' };
+    }
+
     let html = await response.text();
 
-    // Remove the noindex meta tag
-    html = html.replace(/<meta\s+name=["']robots["']\s+content=["']noindex["']\s*\/?>/gi, "");
+    // Remove noindex meta tag and Framer analytics
+    html = html
+      .replace(/<meta\s+name=["']robots["']\s+content=["']noindex["']\s*\/?>/gi, "")
+      .replace(/<script\s+async\s+src="https:\/\/events\.framer\.com\/script".*?<\/script>/gi, "");
 
-    // Remove the Framer analytics script
-    html = html.replace(/<script\s+async\s+src="https:\/\/events\.framer\.com\/script".*?<\/script>/gi, "");
-
-    // Return the modified HTML with headers
     return {
       statusCode: 200,
-      headers: {
-        "Content-Type": "text/html",
-        "X-Robots-Tag": "index, follow",
-      },
+      headers: { "Content-Type": "text/html" },
       body: html,
     };
   } catch (error) {
-    // Return a JSON error response
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: "Error fetching or modifying HTML" }),
-    };
+    return { statusCode: 500, body: "Internal Server Error" };
   }
 };
