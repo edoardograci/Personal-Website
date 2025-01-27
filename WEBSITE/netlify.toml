@@ -2,7 +2,14 @@
   publish = "WEBSITE/dist"
   functions = "WEBSITE/netlify/functions"
 
-# Rewrite ALL paths to the function (invisibly)
+# Serve static assets FIRST (priority)
+[[redirects]]
+  from = "/assets/*"
+  to = "/assets/:splat"
+  status = 200
+  force = true
+
+# Rewrite ALL other paths to the function (invisibly)
 [[redirects]]
   from = "/*"
   to = "/.netlify/functions/rewrite-html"
@@ -10,8 +17,8 @@
   force = true
   conditions = {
     Path = [
+      "!/.netlify/functions/*",
       "!/assets/*",
-      "!/.netlify/functions/*",  # Prevent redirect loops
       "!/favicon.ico",
       "!/sitemap.xml",
       "!/robots.txt",
@@ -20,14 +27,7 @@
     ]
   }
 
-# Serve static assets directly
-[[redirects]]
-  from = "/assets/*"
-  to = "/assets/:splat"
-  status = 200
-  force = true
-
-# Headers (unchanged)
+# Headers (keep existing)
 [[headers]]
   for = "/*"
   [headers.values]
