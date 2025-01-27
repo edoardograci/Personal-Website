@@ -2,7 +2,7 @@
   publish = "WEBSITE/dist"
   functions = "WEBSITE/netlify/functions"
 
-# Rewrite all HTML requests to the function (invisibly)
+# Rewrite ALL requests to the function (invisibly)
 [[redirects]]
   from = "/*"
   to = "/.netlify/functions/rewrite-html"
@@ -10,13 +10,13 @@
   force = true
   conditions = {
     Path = [
-      "!/assets/*",               # Exclude static assets
-      "!/.netlify/functions/*",   # Avoid redirecting the function itself
-      "!/favicon.ico",            # Exclude favicon
-      "!/sitemap.xml",            # Exclude sitemap
-      "!/robots.txt",             # Exclude robots.txt
-      "!/site.webmanifest",       # Exclude web manifest
-      "!/verification/*"          # Exclude verification files
+      "!/assets/*",
+      "!/.netlify/functions/*", # Prevent loops
+      "!/favicon.ico",
+      "!/sitemap.xml",
+      "!/robots.txt",
+      "!/site.webmanifest",
+      "!/verification/*"
     ]
   }
 
@@ -27,14 +27,7 @@
   status = 200
   force = true
 
-# Serve 404.html for unmatched paths
-[[redirects]]
-  from = "/*"
-  to = "/404.html"
-  status = 404
-  force = false
-
-# Consolidated headers for all pages
+# Headers (unchanged)
 [[headers]]
   for = "/*"
   [headers.values]
@@ -45,19 +38,16 @@
     Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
     Cache-Control = "public, max-age=3600"
 
-# Headers for sitemap.xml
 [[headers]]
   for = "/sitemap.xml"
   [headers.values]
     Content-Type = "application/xml"
 
-# Headers for robots.txt
 [[headers]]
   for = "/robots.txt"
   [headers.values]
     Content-Type = "text/plain"
 
-# Headers for favicon.ico
 [[headers]]
   for = "/assets/favicon.ico"
   [headers.values]
