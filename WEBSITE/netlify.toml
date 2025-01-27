@@ -1,33 +1,19 @@
 [build]
   publish = "WEBSITE/dist"
-  functions = "WEBSITE/netlify/functions"
 
-# Serve static assets FIRST (priority)
+# Define the Edge Function
+[[edge_functions]]
+  path = "/*"
+  function = "framer-proxy"
+
+# Serve static assets directly
 [[redirects]]
   from = "/assets/*"
   to = "/assets/:splat"
   status = 200
   force = true
 
-# Rewrite ALL other paths to the function (invisibly)
-[[redirects]]
-  from = "/*"
-  to = "/.netlify/functions/rewrite-html"
-  status = 200
-  force = true
-  conditions = {
-    Path = [
-      "!/.netlify/functions/*",
-      "!/assets/*",
-      "!/favicon.ico",
-      "!/sitemap.xml",
-      "!/robots.txt",
-      "!/site.webmanifest",
-      "!/verification/*"
-    ]
-  }
-
-# Headers (keep existing)
+# Headers (unchanged)
 [[headers]]
   for = "/*"
   [headers.values]
@@ -47,9 +33,3 @@
   for = "/robots.txt"
   [headers.values]
     Content-Type = "text/plain"
-
-[[headers]]
-  for = "/assets/favicon.ico"
-  [headers.values]
-    Cache-Control = "public, max-age=86400"
-    Content-Type = "image/x-icon"
