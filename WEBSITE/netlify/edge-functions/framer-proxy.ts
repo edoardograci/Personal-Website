@@ -21,12 +21,16 @@ export const handler = async (event) => {
       'Accept-Language': 'en-US,en;q=0.9',
     });
 
+    // Determine if the request method supports a body
+    const method = event.httpMethod.toUpperCase();
+    const supportsBody = ['POST', 'PUT', 'PATCH'].includes(method);
+
     // Forward the request to Framer
     const response = await fetch(framerUrl, {
       headers,
       redirect: 'manual',
-      method: event.httpMethod,
-      body: event.body,
+      method,
+      ...(supportsBody && { body: event.body }), // Add body only if supported
     });
 
     // Handle redirects manually
