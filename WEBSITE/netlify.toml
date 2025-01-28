@@ -1,8 +1,12 @@
 # Specify the publish directory for static files
 [build]
   publish = "WEBSITE/dist"
-  functions = "netlify/functions" # Ensure this matches the actual functions folder path
 
+  # Primary edge function route
+[[edge_functions]]
+  path = "/*"
+  function = "framer-proxy"
+  
 # Redirect assets directly from Framer
 [[redirects]]
   from = "/assets/*"
