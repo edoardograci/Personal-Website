@@ -34,10 +34,13 @@ export const handler = async (event) => {
 
     // Handle redirects manually
     if ([301, 302, 307, 308].includes(response.status)) {
+      const location = response.headers.get('location');
+      const cleanLocation = location ? location.replace(framerBase, '') : '';
+
       return {
         statusCode: response.status,
         headers: {
-          Location: response.headers.get('location'),
+          Location: cleanLocation,
         },
         body: '',
       };
@@ -53,7 +56,8 @@ export const handler = async (event) => {
         .replace(/<title>[^<]*<\/title>/gi, '<title>Edoardo Graci - Product Designer</title>')
         .replace(/<meta property="og:title"[^>]*>/gi, '<meta property="og:title" content="Edoardo Graci - Product Designer"/>')
         .replace(/<meta name="description"[^>]*>/gi, '<meta name="description" content="Product designer with a focus on digital products and user experience."/>')
-        .replace(/<meta name="robots"[^>]*>/gi, ''); // Remove the noindex tag
+        .replace(/<meta name="robots"[^>]*>/gi, '') // Remove the noindex tag
+        .replace(new RegExp(framerBase, 'g'), ''); // Replace all Framer base URLs with the clean URL
 
       return {
         statusCode: response.status,
