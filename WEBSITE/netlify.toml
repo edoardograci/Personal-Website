@@ -1,44 +1,18 @@
+# Specify the publish directory for static files
 [build]
   publish = "WEBSITE/dist"
+  functions = "netlify/functions" # Where your functions are located
 
-# Primary edge function route
-[[edge_functions]]
-  path = "/*"
-  function = "framer-proxy"
-
-# Critical redirect fix
-[[redirects]]
-  from = "/*"
-  to = "/.netlify/functions/framer-proxy/:splat"
-  status = 200
-  force = true
-  query = { ":splat": ":splat" }
-
-# Bypass proxy for static assets
+# Redirect assets directly from Framer
 [[redirects]]
   from = "/assets/*"
   to = "https://charismatic-everyone-653587.framer.app/assets/:splat"
   status = 200
   force = true
 
-# Security headers
-[[headers]]
-  for = "/*"
-  [headers.values]
-    X-Robots-Tag = "index, follow"
-    X-Frame-Options = "SAMEORIGIN"
-    X-Content-Type-Options = "nosniff"
-    Referrer-Policy = "strict-origin-when-cross-origin"
-    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
-    Cache-Control = "public, max-age=3600"
-    Vary = "Accept-Encoding"
-
-[[headers]]
-  for = "/sitemap.xml"
-  [headers.values]
-    Content-Type = "application/xml"
-
-[[headers]]
-  for = "/robots.txt"
-  [headers.values]
-    Content-Type = "text/plain"
+# Route all other requests through the proxy
+[[redirects]]
+  from = "/*"
+  to = "/.netlify/functions/framer-proxy/:splat"
+  status = 200
+  force = false
