@@ -9,58 +9,56 @@ export const handler = async (event) => {
     // Construct the Framer URL
     const framerUrl = new URL(cleanPath, framerBase);
 
-    // Log the incoming and proxied requests
+    // Log incoming requests for debugging
     console.log(`Incoming request: ${incomingUrl.href}`);
     console.log(`Proxied to Framer: ${framerUrl.href}`);
 
     // Set headers to bypass Framer restrictions
     const headers = new Headers({
-      'Host': framerBase.replace('https://', ''),
       'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
       'Referer': framerBase,
       'Accept-Language': 'en-US,en;q=0.9',
     });
 
-    // Determine if the request method supports a body
+    // Determine request method
     const method = event.httpMethod.toUpperCase();
     const supportsBody = ['POST', 'PUT', 'PATCH'].includes(method);
 
-    // Forward the request to Framer
+    // Fetch the response from Framer
     const response = await fetch(framerUrl, {
       headers,
       redirect: 'manual',
       method,
-      ...(supportsBody && { body: event.body }), // Add body only if supported
+      body: supportsBody ? event.body : undefined, // FIXED: Only send body if the method supports it
     });
 
     // Handle redirects manually
     if ([301, 302, 307, 308].includes(response.status)) {
-      const location = response.headers.get('location');
-      const redirectedUrl = new URL(location, framerBase);
-      console.log(`Redirecting to: ${redirectedUrl.href}`);
       return {
-        statusCode: 302,
-        headers: { Location: redirectedUrl.href },
+        statusCode: response.status,
+        headers: {
+          Location: response.headers.get('location'),
+        },
         body: '',
       };
     }
 
-    // Handle HTML responses
-    if (response.headers.get('content-type')?.includes('text/html')) {
+    // Ensure it's an HTML response before modification
+    const contentType = response.headers.get('content-type') || '';
+    if (contentType.includes('text/html')) {
       let html = await response.text();
 
-      // Replace metadata dynamically
+      // Modify the HTML
       html = html
         .replace(/<title>[^<]*<\/title>/gi, '<title>Edoardo Graci - Product Designer</title>')
         .replace(/<meta property="og:title"[^>]*>/gi, '<meta property="og:title" content="Edoardo Graci - Product Designer"/>')
         .replace(/<meta name="description"[^>]*>/gi, '<meta name="description" content="Product designer with a focus on digital products and user experience."/>')
-        .replace(/<meta name="robots"[^>]*>/gi, '')
-        .replace(/<script [^>]*framer.com[^>]*><\/script>/gi, '');
+        .replace(/<meta name="robots"[^>]*>/gi, ''); // Remove the noindex tag
 
       return {
         statusCode: response.status,
         headers: {
-          'Content-Type': 'text/html',
+          'Content-Type': 'text/html; charset=UTF-8',
           'X-Robots-Tag': 'index, follow',
           'Cache-Control': 'public, max-age=3600',
         },
@@ -68,7 +66,7 @@ export const handler = async (event) => {
       };
     }
 
-    // Return non-HTML responses as is
+    // Pass through non-HTML responses without modification
     return {
       statusCode: response.status,
       headers: Object.fromEntries(response.headers),
