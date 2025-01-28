@@ -57,7 +57,8 @@ export const handler = async (event) => {
         .replace(/<meta property="og:title"[^>]*>/gi, '<meta property="og:title" content="Edoardo Graci - Product Designer"/>')
         .replace(/<meta name="description"[^>]*>/gi, '<meta name="description" content="Product designer with a focus on digital products and user experience."/>')
         .replace(/<meta name="robots"[^>]*>/gi, '') // Remove the noindex tag
-        .replace(new RegExp(framerBase, 'g'), ''); // Replace all Framer base URLs with the clean URL
+        .replace(new RegExp(framerBase, 'g'), '') // Replace all Framer base URLs with the clean URL
+        .replace(/<script[^>]*src="https:\/\/events\.framer\.com\/script"[^>]*><\/script>/gi, ''); // Remove the problematic script
 
       return {
         statusCode: response.status,
