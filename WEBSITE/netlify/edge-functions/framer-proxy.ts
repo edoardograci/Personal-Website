@@ -1,48 +1,58 @@
-exports.handler = async (request: any) => {
+exports.handler = async (request) => {
   try {
-    // Construct the full URL manually
-    const host = request.headers["host"] || "edoardograci.com";
-    const fullUrl = `https://${host}${request.url || ""}`;
-    const url = new URL(fullUrl);
+    // Preserve original URL components
+    const host = request.headers.host || "edoardograci.com";
+    const fullUrl = new URL(request.url, `https://${host}`);
+    
+    // Remove EXACT proxy path prefix (matches your netlify.toml)
+    const basePath = "/.netlify/edge-functions/framer-proxy";
+    const originalPath = fullUrl.pathname.startsWith(basePath)
+      ? fullUrl.pathname.slice(basePath.length)
+      : fullUrl.pathname;
 
-    // Remove Edge Function prefix from the path
-    const path = url.pathname.replace("/.netlify/functions/framer-proxy", "");
+    // Construct PROPER Framer URL with query params
+    const framerBase = "https://charismatic-everyone-653587.framer.app";
+    const framerUrl = new URL(originalPath + fullUrl.search, framerBase);
 
-    // Construct Framer URL
-    const framerUrl = `https://charismatic-everyone-653587.framer.app${path}`;
+    // Essential headers to avoid 404s
+    const headers = new Headers({
+      "Host": framerBase.replace("https://", ""),
+      "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+      "Referer": "https://edoardograci.com/"
+    });
 
-    // Override headers to bypass Framer's bot detection
-    const headers = new Headers();
-    headers.set(
-      "User-Agent",
-      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
-    );
-    headers.set("Referer", "https://edoardograci.com/");
+    // Proxy request with proper path handling
+    const response = await fetch(framerUrl, {
+      headers,
+      redirect: "follow",
+      method: request.method,
+      body: request.body
+    });
 
-    // Fetch Framer's page
-    const response = await fetch(framerUrl, { headers });
-
-    // Handle 404s
-    if (response.status === 404) {
-      return new Response("Not Found", { status: 404 });
+    // Pass through non-HTML responses directly
+    if (!response.headers.get("content-type")?.includes("text/html")) {
+      return response;
     }
 
-    // Get HTML and modify it
+    // Process HTML
     let html = await response.text();
     html = html
-      .replace(/<meta\s+name=["']robots["']\s+content=["']noindex["']\s*\/?>/gi, "")
-      .replace(/<script\s+async\s+src="https:\/\/events\.framer\.com\/script".*?<\/script>/gi, "");
+      .replace(/<meta\s+name=["']robots["'][^>]*>/gi, '')
+      .replace(/<script[^>]*events\.framer\.com[^>]*><\/script>/gi, '')
+      .replace(/<title>[^<]*<\/title>/gi, '<title>Edoardo Graci - Product Designer</title>')
+      .replace(/<meta property="og:title"[^>]*>/gi, '<meta property="og:title" content="Edoardo Graci - Product Designer"/>')
+      .replace(/<meta name="description"[^>]*>/gi, '<meta name="description" content="Product designer with a focus on digital products and user experience."/>');
 
-    // Return modified HTML with original URL intact
     return new Response(html, {
-      status: 200,
+      status: response.status,
       headers: {
         "Content-Type": "text/html",
         "X-Robots-Tag": "index, follow",
-      },
+        ...Object.fromEntries(response.headers)
+      }
     });
   } catch (error) {
-    console.error("Error in framer-proxy:", error);
+    console.error("Proxy error:", error);
     return new Response("Internal Server Error", { status: 500 });
   }
 };
