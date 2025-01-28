@@ -1,7 +1,7 @@
 # Specify the publish directory for static files
 [build]
   publish = "WEBSITE/dist"
-  functions = "netlify/functions" # Where your functions are located
+  functions = "netlify/functions" # Ensure this matches the actual functions folder path
 
 # Redirect assets directly from Framer
 [[redirects]]
@@ -10,7 +10,13 @@
   status = 200
   force = true
 
-# Route all other requests through the proxy
+# Allow direct access to static files (CSS, JS, images)
+[[redirects]]
+  from = "/static/*"
+  to = "/static/:splat"
+  status = 200
+
+# Route everything else through the proxy (EXCLUDING STATIC FILES)
 [[redirects]]
   from = "/*"
   to = "/.netlify/functions/framer-proxy/:splat"
