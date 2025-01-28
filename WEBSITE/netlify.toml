@@ -1,25 +1,32 @@
 [build]
   publish = "WEBSITE/dist"
 
-# Define the Edge Function
+# Edge function routing
 [[edge_functions]]
   path = "/*"
   function = "framer-proxy"
+  # Add explicit priority
+  [edge_functions]
+    for = "/*"
 
-# Serve static assets directly
+# Critical redirect fix
+[[redirects]]
+  from = "/*"
+  to = "/.netlify/edge-functions/framer-proxy/:splat"
+  status = 200
+  force = true
+  # Add query parameter preservation
+  query = { ":splat" = ":splat" }
+
+# Static assets handling
 [[redirects]]
   from = "/assets/*"
-  to = "/assets/:splat"
+  to = "https://charismatic-everyone-653587.framer.app/assets/:splat"
   status = 200
-  force = false
-  
-[[redirects]]
-from = "/*"
-to = "/.netlify/edge-functions/framer-proxy"
-status = 200
-force = true
-  
-# Headers (unchanged)
+  force = true
+  conditions = { Edge = "framer-proxy" }
+
+# Security headers
 [[headers]]
   for = "/*"
   [headers.values]
@@ -29,12 +36,18 @@ force = true
     Referrer-Policy = "strict-origin-when-cross-origin"
     Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
     Cache-Control = "public, max-age=3600"
+    # Add critical proxy header
+    Vary = "Accept-Encoding"
 
 [[headers]]
   for = "/sitemap.xml"
   [headers.values]
     Content-Type = "application/xml"
 
+[[headers]]
+  for = "/robots.txt"
+  [headers.values]
+    Content-Type = "text/plain"
 [[headers]]
   for = "/robots.txt"
   [headers.values]
