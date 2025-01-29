@@ -1,57 +1,41 @@
-[
-build
-]
+[build]
   publish = "WEBSITE/dist"
 
 # First, handle direct asset requests
-[[
-redirects
-]]
+[[redirects]]
   from = "/assets/*"
   to = "https://charismatic-everyone-653587.framer.app/assets/:splat"
   status = 200
   force = true
 
 # Then handle static files
-[[
-redirects
-]]
+[[redirects]]
   from = "/static/*"
   to = "/static/:splat"
   status = 200
 
 # Important: Set up edge function
-[[
-edge_functions
-]]
+[[edge_functions]]
   function = "framer-proxy"
   path = "/*"
 
 # Catch-all redirect to handle the root path and everything else
-[[
-redirects
-]]
+[[redirects]]
   from = "/"
   to = "/.netlify/edge-functions/framer-proxy"
   status = 200
   force = true
 
-[[
-redirects
-]]
+[[redirects]]
   from = "/*"
   to = "/.netlify/edge-functions/framer-proxy"
   status = 200
   force = true
 
 # Add security headers
-[[
-headers
-]]
+[[headers]]
   for = "/*"
-  [
-headers.values
-]
+  [headers.values]
     X-Frame-Options = "DENY"
     X-XSS-Protection = "1; mode=block"
     X-Content-Type-Options = "nosniff"
