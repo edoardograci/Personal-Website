@@ -1,11 +1,6 @@
 [build]
   publish = "WEBSITE/dist"
-
-# Primary edge function route
-[[edge_functions]]
-  path = "/*"
-  function = "framer-proxy"
-
+  
 # Redirect assets directly from Framer
 [[redirects]]
   from = "/assets/*"
@@ -19,19 +14,14 @@
   to = "/static/:splat"
   status = 200
 
-# Catch-all redirect to the edge function
+# Route everything else through the proxy (EXCLUDING STATIC FILES)
 [[redirects]]
   from = "/*"
   to = "/.netlify/functions/framer-proxy"
   status = 200
   force = true
 
-# Add security headers
-[[headers]]
-  for = "/*"
-  [headers.values]
-    X-Frame-Options = "DENY"
-    X-XSS-Protection = "1; mode=block"
-    X-Content-Type-Options = "nosniff"
-    Referrer-Policy = "strict-origin-when-cross-origin"
-    Permissions-Policy = "geolocation=(), microphone=(), camera=()"
+# Edge function to handle proxying
+[[edge_functions]]
+  path = "/*"  # Edge function handles all paths after redirects
+  function = "framer-proxy"
