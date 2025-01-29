@@ -22,7 +22,7 @@
 # Catch-all redirect to the edge function
 [[redirects]]
   from = "/*"
-  to = "/.netlify/edge-functions/framer-proxy"
+  to = "/.netlify/functions/framer-proxy"
   status = 200
   force = true
 
