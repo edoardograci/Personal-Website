@@ -1,75 +1,82 @@
 export const handler = async (event) => {
   try {
+    // Parse the incoming request URL
     const incomingUrl = new URL(event.rawUrl);
     const proxyPrefix = '/.netlify/functions/framer-proxy';
+    const cleanPath = incomingUrl.pathname.replace(proxyPrefix, '') || '/';
     const framerBase = 'https://charismatic-everyone-653587.framer.app';
 
-    // Sanitize the path (remove proxy prefix and ensure no double slashes)
-    let cleanPath = incomingUrl.pathname.replace(proxyPrefix, '');
-    cleanPath = cleanPath.startsWith('/') ? cleanPath : `/${cleanPath}`;
-    cleanPath = cleanPath.replace(/\/+/g, '/'); // Remove double slashes
-
+    // Construct the Framer URL
     const framerUrl = new URL(cleanPath, framerBase);
 
-    console.log(`Proxying: ${incomingUrl.href} → ${framerUrl.href}`);
+    // Log incoming requests for debugging
+    console.log(`Incoming request: ${incomingUrl.href}`);
+    console.log(`Proxied to Framer: ${framerUrl.href}`);
 
-    // Configure headers to mimic a browser
+    // Set headers to bypass Framer restrictions
     const headers = new Headers({
       'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
       'Referer': framerBase,
       'Accept-Language': 'en-US,en;q=0.9',
     });
 
-    // Fetch from Framer
+    // Determine request method
     const method = event.httpMethod.toUpperCase();
+    const supportsBody = ['POST', 'PUT', 'PATCH'].includes(method);
+
+    // Fetch the response from Framer
     const response = await fetch(framerUrl, {
       headers,
-      method,
       redirect: 'manual',
-      body: ['POST', 'PUT', 'PATCH'].includes(method) ? event.body : undefined,
+      method,
+      body: supportsBody ? event.body : undefined, // FIXED: Only send body if the method supports it
     });
 
-    // Handle redirects
+    // Handle redirects manually
     if ([301, 302, 307, 308].includes(response.status)) {
-      const location = response.headers.get('location') || '';
-      const cleanLocation = location.replace(framerBase, '');
-      return { statusCode: response.status, headers: { Location: cleanLocation }, body: '' };
+      return {
+        statusCode: response.status,
+        headers: {
+          Location: response.headers.get('location'),
+        },
+        body: '',
+      };
     }
 
-    // Process HTML responses
+    // Ensure it's an HTML response before modification
     const contentType = response.headers.get('content-type') || '';
     if (contentType.includes('text/html')) {
       let html = await response.text();
+
+      // Modify the HTML
       html = html
         .replace(/<title>[^<]*<\/title>/gi, '<title>Edoardo Graci - Product Designer</title>')
         .replace(/<meta property="og:title"[^>]*>/gi, '<meta property="og:title" content="Edoardo Graci - Product Designer"/>')
         .replace(/<meta name="description"[^>]*>/gi, '<meta name="description" content="Product designer with a focus on digital products and user experience."/>')
-        .replace(/<meta name="robots"[^>]*>/gi, '')
-        .replace(new RegExp(framerBase, 'g'), '')
-        .replace(/<script[^>]*src="https:\/\/events\.framer\.com\/script"[^>]*><\/script>/gi, '');
+        .replace(/<meta name="robots"[^>]*>/gi, ''); // Remove the noindex tag
 
       return {
         statusCode: response.status,
         headers: {
           'Content-Type': 'text/html; charset=UTF-8',
           'X-Robots-Tag': 'index, follow',
-          'Cache-Control': 'public, max-age=300',  // Reduced to 5 minutes
+          'Cache-Control': 'public, max-age=3600',
         },
         body: html,
       };
     }
 
-    // Handle binary data (images, fonts, etc.)
-    const buffer = await response.arrayBuffer();
+    // Pass through non-HTML responses without modification
     return {
       statusCode: response.status,
       headers: Object.fromEntries(response.headers),
-      body: Buffer.from(buffer).toString('base64'),
-      isBase64Encoded: true,  // Critical for non-text content
+      body: await response.text(),
     };
-
   } catch (error) {
     console.error('Proxy error:', error);
-    return { statusCode: 500, body: `Proxy error: ${error.message}` };
+    return {
+      statusCode: 500,
+      body: `Proxy error: ${error.message}`,
+    };
   }
 };
