@@ -1,99 +1,75 @@
-export default async function handler(event) {
+export const handler = async (event) => {
   try {
-    // Construct the incoming URL
-    const host = event.headers.get('host') || 'edoardograci.com';
-    const protocol = event.headers.get('x-forwarded-proto') || 'https';
-    const incomingUrl = new URL(event.url, `${protocol}://${host}`);
+    const incomingUrl = new URL(event.rawUrl);
+    const proxyPrefix = '/.netlify/functions/framer-proxy';
     const framerBase = 'https://charismatic-everyone-653587.framer.app';
 
-    // Clean up the path
-    let cleanPath = incomingUrl.pathname;
+    // Sanitize the path (remove proxy prefix and ensure no double slashes)
+    let cleanPath = incomingUrl.pathname.replace(proxyPrefix, '');
     cleanPath = cleanPath.startsWith('/') ? cleanPath : `/${cleanPath}`;
-    cleanPath = cleanPath.replace(/\/+/g, '/');
+    cleanPath = cleanPath.replace(/\/+/g, '/'); // Remove double slashes
 
-    // Build the Framer URL
     const framerUrl = new URL(cleanPath, framerBase);
-    framerUrl.search = incomingUrl.search;
 
-    // Set up request headers
+    console.log(`Proxying: ${incomingUrl.href} → ${framerUrl.href}`);
+
+    // Configure headers to mimic a browser
     const headers = new Headers({
       'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
       'Referer': framerBase,
       'Accept-Language': 'en-US,en;q=0.9',
-      'Accept': '*/*',
-      'Connection': 'keep-alive',
     });
 
-    // Forward headers from the original request
-    for (const [key, value] of event.headers.entries()) {
-      if (!['host', 'referer', 'user-agent'].includes(key.toLowerCase())) {
-        headers.set(key, value);
-      }
-    }
-
-    // Make the request to the Framer site
-    const response = await fetch(framerUrl.toString(), {
+    // Fetch from Framer
+    const method = event.httpMethod.toUpperCase();
+    const response = await fetch(framerUrl, {
       headers,
-      method: event.method,
+      method,
       redirect: 'manual',
-      body: ['POST', 'PUT', 'PATCH'].includes(event.method) ? event.body : undefined,
+      body: ['POST', 'PUT', 'PATCH'].includes(method) ? event.body : undefined,
     });
 
     // Handle redirects
     if ([301, 302, 307, 308].includes(response.status)) {
       const location = response.headers.get('location') || '';
       const cleanLocation = location.replace(framerBase, '');
-      return new Response(null, {
-        status: response.status,
-        headers: { Location: cleanLocation },
-      });
+      return { statusCode: response.status, headers: { Location: cleanLocation }, body: '' };
     }
 
-    // If the response is a 404, return a 404
-    if (response.status === 404) {
-      return new Response('Not Found', { status: 404 });
-    }
-
-    // Process the response
+    // Process HTML responses
     const contentType = response.headers.get('content-type') || '';
     if (contentType.includes('text/html')) {
       let html = await response.text();
-
-      // Modify the HTML as needed
       html = html
         .replace(/<title>[^<]*<\/title>/gi, '<title>Edoardo Graci - Product Designer</title>')
-        .replace(/<meta\s+name=["']description["'][^>]*>/gi, '<meta name="description" content="Product designer with a focus on digital products and user experience."/>')
-        .replace(/<meta\s+property=["']og:title["'][^>]*>/gi, '<meta property="og:title" content="Edoardo Graci - Product Designer"/>')
-        .replace(/<meta\s+name=["']robots["'][^>]*>/gi, '<meta name="robots" content="index, follow"/>')
+        .replace(/<meta property="og:title"[^>]*>/gi, '<meta property="og:title" content="Edoardo Graci - Product Designer"/>')
+        .replace(/<meta name="description"[^>]*>/gi, '<meta name="description" content="Product designer with a focus on digital products and user experience."/>')
+        .replace(/<meta name="robots"[^>]*>/gi, '')
         .replace(new RegExp(framerBase, 'g'), '')
-        .replace(/<script[^>]*src=["']https:\/\/events\.framer\.com\/script["'][^>]*><\/script>/gi, '');
+        .replace(/<script[^>]*src="https:\/\/events\.framer\.com\/script"[^>]*><\/script>/gi, '');
 
-      // Add robots meta tag if missing
-      if (!html.includes('name="robots"')) {
-        html = html.replace('</head>', '<meta name="robots" content="index, follow">\n</head>');
-      }
-
-      // Return the modified HTML
-      return new Response(html, {
-        status: response.status,
-        headers: new Headers({
+      return {
+        statusCode: response.status,
+        headers: {
           'Content-Type': 'text/html; charset=UTF-8',
           'X-Robots-Tag': 'index, follow',
-          'Cache-Control': 'public, max-age=300',
-        }),
-      });
+          'Cache-Control': 'public, max-age=300',  // Reduced to 5 minutes
+        },
+        body: html,
+      };
     }
 
-    // Return non-HTML responses as-is
-    return new Response(response.body, {
-      status: response.status,
-      headers: response.headers,
-    });
+    // Handle binary data (images, fonts, etc.)
+    const buffer = await response.arrayBuffer();
+    return {
+      statusCode: response.status,
+      headers: Object.fromEntries(response.headers),
+      body: Buffer.from(buffer).toString('base64'),
+      isBase64Encoded: true,  // Critical for non-text content
+    };
+
   } catch (error) {
     console.error('Proxy error:', error);
-    return new Response(`Proxy error: ${error.message}`, {
-      status: 500,
-      headers: { 'Content-Type': 'text/plain' },
-    });
+    return { statusCode: 500, body: `Proxy error: ${error.message}` };
   }
-}
+};
