@@ -34,13 +34,23 @@ export const handler = async (event) => {
 
     // Handle redirects manually
     if ([301, 302, 307, 308].includes(response.status)) {
-      const location = response.headers.get('location');
-      const cleanLocation = location ? location.replace(framerBase, '') : '';
+    let location = response.headers.get('location') || '';
 
-      return {
-        statusCode: response.status,
+    // Remove Framer Base URL
+    location = location.replace(framerBase, '');
+
+    // Ensure the redirect path starts with '/' and remove Netlify function path
+    if (!location.startsWith('/')) {
+      location = '/' + location;
+    }
+    location = location.replace(proxyPrefix, '');
+
+    console.log(`Redirecting to cleaned location: ${location}`);
+
+    return {
+      statusCode: response.status,
         headers: {
-          Location: cleanLocation,
+          Location: location,
         },
         body: '',
       };
