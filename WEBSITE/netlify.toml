@@ -1,27 +1,59 @@
-[build]
-  publish = "WEBSITE/dist"  # Matches your GitHub repo structure
+[
+build
+]
+  publish = "WEBSITE/dist"
 
-# Redirect assets directly from Framer
-[[redirects]]
+# First, handle direct asset requests
+[[
+redirects
+]]
   from = "/assets/*"
   to = "https://charismatic-everyone-653587.framer.app/assets/:splat"
   status = 200
-  force = true  # Override conflicting rules
+  force = true
 
-# Allow direct access to static files (CSS, JS, images)
-[[redirects]]
+# Then handle static files
+[[
+redirects
+]]
   from = "/static/*"
   to = "/static/:splat"
   status = 200
 
-# Route everything else through the proxy (EXCLUDING STATIC FILES)
-[[redirects]]
-  from = "/*"
-  to = "/.netlify/functions/framer-proxy"  # Removed `:splat`
-  status = 200
-  force = true  # Critical to override Netlify's default routing
-
-# Edge function to handle proxying
-[[edge_functions]]
-  path = "/*"  # Edge function handles all paths after redirects
+# Important: Set up edge function
+[[
+edge_functions
+]]
   function = "framer-proxy"
+  path = "/*"
+
+# Catch-all redirect to handle the root path and everything else
+[[
+redirects
+]]
+  from = "/"
+  to = "/.netlify/edge-functions/framer-proxy"
+  status = 200
+  force = true
+
+[[
+redirects
+]]
+  from = "/*"
+  to = "/.netlify/edge-functions/framer-proxy"
+  status = 200
+  force = true
+
+# Add security headers
+[[
+headers
+]]
+  for = "/*"
+  [
+headers.values
+]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=()"
