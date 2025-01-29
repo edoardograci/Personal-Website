@@ -6,13 +6,8 @@ export default async function handler(event) {
     const incomingUrl = new URL(event.url, `${protocol}://${host}`);
     const framerBase = 'https://charismatic-everyone-653587.framer.app';
 
-    // Determine the path to proxy
-    let cleanPath = incomingUrl.pathname;
-    if (cleanPath === '/.netlify/edge-functions/framer-proxy') {
-      return new Response('Not Found', { status: 404 });
-    }
-
     // Clean up the path
+    let cleanPath = incomingUrl.pathname;
     cleanPath = cleanPath.startsWith('/') ? cleanPath : `/${cleanPath}`;
     cleanPath = cleanPath.replace(/\/+/g, '/');
 
@@ -52,6 +47,11 @@ export default async function handler(event) {
         status: response.status,
         headers: { Location: cleanLocation },
       });
+    }
+
+    // If the response is a 404, return a 404
+    if (response.status === 404) {
+      return new Response('Not Found', { status: 404 });
     }
 
     // Process the response
