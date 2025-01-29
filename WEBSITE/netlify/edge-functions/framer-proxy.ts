@@ -1,4 +1,4 @@
-bexport default async function handler(event) {
+export default async function handler(event) {
   try {
     const incomingUrl = new URL(event.rawUrl);
     const framerBase = 'https://charismatic-everyone-653587.framer.app';
