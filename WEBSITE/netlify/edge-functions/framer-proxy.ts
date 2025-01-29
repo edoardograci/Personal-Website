@@ -4,8 +4,11 @@ export const handler = async (event) => {
     const proxyPrefix = '/.netlify/functions/framer-proxy';
     const framerBase = 'https://charismatic-everyone-653587.framer.app';
 
-    // Sanitize the path (remove proxy prefix and ensure no double slashes)
-    let cleanPath = incomingUrl.pathname.replace(proxyPrefix, '');
+    // Sanitize the path (remove proxy prefix if present and ensure no double slashes)
+    let cleanPath = incomingUrl.pathname;
+    if (cleanPath.startsWith(proxyPrefix)) {
+      cleanPath = cleanPath.replace(proxyPrefix, '');
+    }
     cleanPath = cleanPath.startsWith('/') ? cleanPath : `/${cleanPath}`;
     cleanPath = cleanPath.replace(/\/+/g, '/'); // Remove double slashes
 
@@ -44,9 +47,9 @@ export const handler = async (event) => {
         .replace(/<title>[^<]*<\/title>/gi, '<title>Edoardo Graci - Product Designer</title>')
         .replace(/<meta property="og:title"[^>]*>/gi, '<meta property="og:title" content="Edoardo Graci - Product Designer"/>')
         .replace(/<meta name="description"[^>]*>/gi, '<meta name="description" content="Product designer with a focus on digital products and user experience."/>')
-        .replace(/<meta name="robots"[^>]*>/gi, '')
-        .replace(new RegExp(framerBase, 'g'), '')
-        .replace(/<script[^>]*src="https:\/\/events\.framer\.com\/script"[^>]*><\/script>/gi, '');
+        .replace(/<meta name="robots"[^>]*>/gi, '')  // Remove the noindex tag
+        .replace(new RegExp(framerBase, 'g'), '')  // Replace all Framer base URLs with the clean URL
+        .replace(/<script[^>]*src="https:\/\/events\.framer\.com\/script"[^>]*><\/script>/gi, '');  // Remove the problematic script
 
       return {
         statusCode: response.status,
