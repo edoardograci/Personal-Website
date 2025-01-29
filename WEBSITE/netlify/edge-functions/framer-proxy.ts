@@ -1,8 +1,8 @@
-export const handler = async (event) => {
+export default async (request) => {
   try {
     // Parse the incoming request URL
-    const incomingUrl = new URL(event.rawUrl);
-    const proxyPrefix = '/.netlify/functions/framer-proxy';
+    const incomingUrl = new URL(request.url);
+    const proxyPrefix = '/.netlify/edge-functions/framer-proxy';
     const cleanPath = incomingUrl.pathname.replace(proxyPrefix, '') || '/';
     const framerBase = 'https://charismatic-everyone-653587.framer.app';
 
@@ -14,14 +14,14 @@ export const handler = async (event) => {
     console.log(`Proxied to Framer: ${framerUrl.href}`);
 
     // Set headers to bypass Framer restrictions
-    const headers = new Headers({
+    const headers = {
       'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
       'Referer': framerBase,
       'Accept-Language': 'en-US,en;q=0.9',
-    });
+    };
 
     // Determine request method
-    const method = event.httpMethod.toUpperCase();
+    const method = request.method.toUpperCase();
     const supportsBody = ['POST', 'PUT', 'PATCH'].includes(method);
 
     // Fetch the response from Framer
@@ -29,7 +29,7 @@ export const handler = async (event) => {
       headers,
       redirect: 'manual',
       method,
-      body: supportsBody ? event.body : undefined, // FIXED: Only send body if the method supports it
+      body: supportsBody ? request.body : undefined,
     });
 
     // Handle redirects manually
@@ -37,13 +37,12 @@ export const handler = async (event) => {
       const location = response.headers.get('location');
       const cleanLocation = location ? location.replace(framerBase, '') : '';
 
-      return {
-        statusCode: response.status,
+      return new Response(null, {
+        status: response.status,
         headers: {
           Location: cleanLocation,
         },
-        body: '',
-      };
+      });
     }
 
     // Ensure it's an HTML response before modification
@@ -60,28 +59,25 @@ export const handler = async (event) => {
         .replace(new RegExp(framerBase, 'g'), '') // Replace all Framer base URLs with the clean URL
         .replace(/<script[^>]*src="https:\/\/events\.framer\.com\/script"[^>]*><\/script>/gi, ''); // Remove the problematic script
 
-      return {
-        statusCode: response.status,
+      return new Response(html, {
+        status: response.status,
         headers: {
           'Content-Type': 'text/html; charset=UTF-8',
           'X-Robots-Tag': 'index, follow',
           'Cache-Control': 'public, max-age=3600',
         },
-        body: html,
-      };
+      });
     }
 
     // Pass through non-HTML responses without modification
-    return {
-      statusCode: response.status,
-      headers: Object.fromEntries(response.headers),
-      body: await response.text(),
-    };
+    return new Response(response.body, {
+      status: response.status,
+      headers: response.headers,
+    });
   } catch (error) {
     console.error('Proxy error:', error);
-    return {
-      statusCode: 500,
-      body: `Proxy error: ${error.message}`,
-    };
+    return new Response(`Proxy error: ${error.message}`, {
+      status: 500,
+    });
   }
 };
