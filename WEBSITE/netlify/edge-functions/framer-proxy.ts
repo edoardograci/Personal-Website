@@ -1,6 +1,9 @@
 export default async function handler(event) {
   try {
-    const incomingUrl = new URL(event.rawUrl);
+    // Construct the full URL using event.url and event.headers
+    const host = event.headers.get('host') || 'edoardograci.com';
+    const protocol = event.headers.get('x-forwarded-proto') || 'https';
+    const incomingUrl = new URL(event.url, `${protocol}://${host}`);
     const framerBase = 'https://charismatic-everyone-653587.framer.app';
     
     // Handle root path specifically
@@ -12,13 +15,15 @@ export default async function handler(event) {
     // Sanitize the path
     cleanPath = cleanPath.startsWith('/') ? cleanPath : `/${cleanPath}`;
     cleanPath = cleanPath.replace(/\/+/g, '/');
+    
+    // Construct Framer URL
     const framerUrl = new URL(cleanPath, framerBase);
     framerUrl.search = incomingUrl.search;
     
-    console.log(`Proxying request:`, {
-      from: incomingUrl.href,
-      to: framerUrl.href,
-      path: cleanPath
+    console.log('Debug info:', {
+      incomingPath: cleanPath,
+      framerUrl: framerUrl.toString(),
+      originalUrl: event.url
     });
 
     const headers = new Headers({
@@ -30,18 +35,17 @@ export default async function handler(event) {
     });
 
     // Forward original headers
-    for (const [key, value] of Object.entries(event.headers)) {
+    for (const [key, value] of event.headers.entries()) {
       if (!['host', 'referer', 'user-agent'].includes(key.toLowerCase())) {
         headers.set(key, value);
       }
     }
 
-    const method = event.method;
-    const response = await fetch(framerUrl, {
+    const response = await fetch(framerUrl.toString(), {
       headers,
-      method,
+      method: event.method,
       redirect: 'manual',
-      body: ['POST', 'PUT', 'PATCH'].includes(method) ? event.body : undefined,
+      body: ['POST', 'PUT', 'PATCH'].includes(event.method) ? event.body : undefined,
     });
 
     // Handle redirects
@@ -100,4 +104,3 @@ export default async function handler(event) {
       }
     });
   }
-}
