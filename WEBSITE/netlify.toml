@@ -1,28 +1,23 @@
-# Specify the publish directory for static files
 [build]
   publish = "WEBSITE/dist"
 
-  # Primary edge function route
 [[edge_functions]]
   path = "/*"
   function = "framer-proxy"
-  
-# Redirect assets directly from Framer
+
 [[redirects]]
   from = "/assets/*"
   to = "https://charismatic-everyone-653587.framer.app/assets/:splat"
   status = 200
   force = true
 
-# Allow direct access to static files (CSS, JS, images)
 [[redirects]]
   from = "/static/*"
   to = "/static/:splat"
   status = 200
 
-# Route everything else through the proxy (EXCLUDING STATIC FILES)
 [[redirects]]
   from = "/*"
-  to = "/.netlify/functions/framer-proxy/:splat"
+  to = "/.netlify/edge-functions/framer-proxy"
   status = 200
   force = false
