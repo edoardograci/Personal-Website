@@ -1,3 +1,4 @@
+// netlify/edge-functions/framer-proxy.ts
 export const handler = async (event) => {
   try {
     const incomingUrl = new URL(event.rawUrl);
@@ -85,49 +86,5 @@ export const handler = async (event) => {
   } catch (error) {
     console.error('Proxy error:', error);
     return new Response(`Proxy error: ${error.message}`, { status: 500 });
-  }
-};
-    // Handle redirects
-    if ([301, 302, 307, 308].includes(response.status)) {
-      const location = response.headers.get('location') || '';
-      const cleanLocation = location.replace(framerBase, '');
-      return { statusCode: response.status, headers: { Location: cleanLocation }, body: '' };
-    }
-
-    // Process HTML responses
-    const contentType = response.headers.get('content-type') || '';
-    if (contentType.includes('text/html')) {
-      let html = await response.text();
-      html = html
-        .replace(/<title>[^<]*<\/title>/gi, '<title>Edoardo Graci - Product Designer</title>')
-        .replace(/<meta property="og:title"[^>]*>/gi, '<meta property="og:title" content="Edoardo Graci - Product Designer"/>')
-        .replace(/<meta name="description"[^>]*>/gi, '<meta name="description" content="Product designer with a focus on digital products and user experience."/>')
-        .replace(/<meta name="robots"[^>]*>/gi, '')  // Remove the noindex tag
-        .replace(new RegExp(framerBase, 'g'), '')  // Replace all Framer base URLs with the clean URL
-        .replace(/<script[^>]*src="https:\/\/events\.framer\.com\/script"[^>]*><\/script>/gi, '');  // Remove the problematic script
-
-      return {
-        statusCode: response.status,
-        headers: {
-          'Content-Type': 'text/html; charset=UTF-8',
-          'X-Robots-Tag': 'index, follow',
-          'Cache-Control': 'public, max-age=300',  // Reduced to 5 minutes
-        },
-        body: html,
-      };
-    }
-
-    // Handle binary data (images, fonts, etc.)
-    const buffer = await response.arrayBuffer();
-    return {
-      statusCode: response.status,
-      headers: Object.fromEntries(response.headers),
-      body: Buffer.from(buffer).toString('base64'),
-      isBase64Encoded: true,  // Critical for non-text content
-    };
-
-  } catch (error) {
-    console.error('Proxy error:', error);
-    return { statusCode: 500, body: `Proxy error: ${error.message}` };
   }
 };
