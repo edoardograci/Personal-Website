@@ -17,6 +17,7 @@ export const handler = async (event) => {
     const headers = new Headers({
       'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
       'Referer': framerBase,
+      'Origin': framerBase,  // Added this line to help with CORS issues
       'Accept-Language': 'en-US,en;q=0.9',
     });
 
@@ -34,23 +35,15 @@ export const handler = async (event) => {
 
     // Handle redirects manually
     if ([301, 302, 307, 308].includes(response.status)) {
-    let location = response.headers.get('location') || '';
+      const location = response.headers.get('location');
+      console.log(`Redirected location before cleaning: ${location}`);
 
-    // Remove Framer Base URL
-    location = location.replace(framerBase, '');
+      const cleanLocation = location ? location.replace(framerBase, '') : '';
 
-    // Ensure the redirect path starts with '/' and remove Netlify function path
-    if (!location.startsWith('/')) {
-      location = '/' + location;
-    }
-    location = location.replace(proxyPrefix, '');
-
-    console.log(`Redirecting to cleaned location: ${location}`);
-
-    return {
-      statusCode: response.status,
+      return {
+        statusCode: response.status,
         headers: {
-          Location: location,
+          Location: cleanLocation,
         },
         body: '',
       };
@@ -67,8 +60,8 @@ export const handler = async (event) => {
         .replace(/<meta property="og:title"[^>]*>/gi, '<meta property="og:title" content="Edoardo Graci - Product Designer"/>')
         .replace(/<meta name="description"[^>]*>/gi, '<meta name="description" content="Product designer with a focus on digital products and user experience."/>')
         .replace(/<meta name="robots"[^>]*>/gi, '') // Remove the noindex tag
-        .replace(new RegExp(framerBase, 'g'), '') // Replace all Framer base URLs with the clean URL
-        .replace(/<script[^>]*src="https:\/\/events\.framer\.com\/script"[^>]*><\/script>/gi, ''); // Remove the problematic script
+        .replace(new RegExp(framerBase + '/', 'g'), '/') // Preserve leading slashes in URLs
+        .replace(/<script[^>]*src="https:\/\/events\.framer\.com\/script"[^>]*><\/script>/gi, ''); // Remove problematic script
 
       return {
         statusCode: response.status,
