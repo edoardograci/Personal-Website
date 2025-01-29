@@ -1,14 +1,10 @@
 export const handler = async (event) => {
   try {
     const incomingUrl = new URL(event.rawUrl);
-    const proxyPrefix = '/.netlify/functions/framer-proxy';
     const framerBase = 'https://charismatic-everyone-653587.framer.app';
 
-    // Sanitize the path (remove proxy prefix if present and ensure no double slashes)
+    // Sanitize the path (ensure no double slashes)
     let cleanPath = incomingUrl.pathname;
-    if (cleanPath.startsWith(proxyPrefix)) {
-      cleanPath = cleanPath.replace(proxyPrefix, '');
-    }
     cleanPath = cleanPath.startsWith('/') ? cleanPath : `/${cleanPath}`;
     cleanPath = cleanPath.replace(/\/+/g, '/'); // Remove double slashes
 
