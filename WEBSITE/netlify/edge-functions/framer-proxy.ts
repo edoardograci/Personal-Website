@@ -1,83 +1,75 @@
-export default async (request) => {
+export const handler = async (event) => {
   try {
-    // Parse the incoming request URL
-    const incomingUrl = new URL(request.url);
-    const proxyPrefix = '/.netlify/edge-functions/framer-proxy';
-    const cleanPath = incomingUrl.pathname.replace(proxyPrefix, '') || '/';
+    const incomingUrl = new URL(event.rawUrl);
+    const proxyPrefix = '/.netlify/functions/framer-proxy';
     const framerBase = 'https://charismatic-everyone-653587.framer.app';
 
-    // Construct the Framer URL
+    // Sanitize the path (remove proxy prefix and ensure no double slashes)
+    let cleanPath = incomingUrl.pathname.replace(proxyPrefix, '');
+    cleanPath = cleanPath.startsWith('/') ? cleanPath : `/${cleanPath}`;
+    cleanPath = cleanPath.replace(/\/+/g, '/'); // Remove double slashes
+
     const framerUrl = new URL(cleanPath, framerBase);
 
-    // Log incoming requests for debugging
-    console.log(`Incoming request: ${incomingUrl.href}`);
-    console.log(`Proxied to Framer: ${framerUrl.href}`);
+    console.log(`Proxying: ${incomingUrl.href} → ${framerUrl.href}`);
 
-    // Set headers to bypass Framer restrictions
-    const headers = {
+    // Configure headers to mimic a browser
+    const headers = new Headers({
       'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
       'Referer': framerBase,
       'Accept-Language': 'en-US,en;q=0.9',
-    };
-
-    // Determine request method
-    const method = request.method.toUpperCase();
-    const supportsBody = ['POST', 'PUT', 'PATCH'].includes(method);
-
-    // Fetch the response from Framer
-    const response = await fetch(framerUrl, {
-      headers,
-      redirect: 'manual',
-      method,
-      body: supportsBody ? request.body : undefined,
     });
 
-    // Handle redirects manually
-    if ([301, 302, 307, 308].includes(response.status)) {
-      const location = response.headers.get('location');
-      const cleanLocation = location ? location.replace(framerBase, '') : '';
+    // Fetch from Framer
+    const method = event.httpMethod.toUpperCase();
+    const response = await fetch(framerUrl, {
+      headers,
+      method,
+      redirect: 'manual',
+      body: ['POST', 'PUT', 'PATCH'].includes(method) ? event.body : undefined,
+    });
 
-      return new Response(null, {
-        status: response.status,
-        headers: {
-          Location: cleanLocation,
-        },
-      });
+    // Handle redirects
+    if ([301, 302, 307, 308].includes(response.status)) {
+      const location = response.headers.get('location') || '';
+      const cleanLocation = location.replace(framerBase, '');
+      return { statusCode: response.status, headers: { Location: cleanLocation }, body: '' };
     }
 
-    // Ensure it's an HTML response before modification
+    // Process HTML responses
     const contentType = response.headers.get('content-type') || '';
     if (contentType.includes('text/html')) {
       let html = await response.text();
-
-      // Modify the HTML
       html = html
         .replace(/<title>[^<]*<\/title>/gi, '<title>Edoardo Graci - Product Designer</title>')
         .replace(/<meta property="og:title"[^>]*>/gi, '<meta property="og:title" content="Edoardo Graci - Product Designer"/>')
         .replace(/<meta name="description"[^>]*>/gi, '<meta name="description" content="Product designer with a focus on digital products and user experience."/>')
-        .replace(/<meta name="robots"[^>]*>/gi, '') // Remove the noindex tag
-        .replace(new RegExp(framerBase, 'g'), '') // Replace all Framer base URLs with the clean URL
-        .replace(/<script[^>]*src="https:\/\/events\.framer\.com\/script"[^>]*><\/script>/gi, ''); // Remove the problematic script
+        .replace(/<meta name="robots"[^>]*>/gi, '')
+        .replace(new RegExp(framerBase, 'g'), '')
+        .replace(/<script[^>]*src="https:\/\/events\.framer\.com\/script"[^>]*><\/script>/gi, '');
 
-      return new Response(html, {
-        status: response.status,
+      return {
+        statusCode: response.status,
         headers: {
           'Content-Type': 'text/html; charset=UTF-8',
           'X-Robots-Tag': 'index, follow',
-          'Cache-Control': 'public, max-age=3600',
+          'Cache-Control': 'public, max-age=300',  // Reduced to 5 minutes
         },
-      });
+        body: html,
+      };
     }
 
-    // Pass through non-HTML responses without modification
-    return new Response(response.body, {
-      status: response.status,
-      headers: response.headers,
-    });
+    // Handle binary data (images, fonts, etc.)
+    const buffer = await response.arrayBuffer();
+    return {
+      statusCode: response.status,
+      headers: Object.fromEntries(response.headers),
+      body: Buffer.from(buffer).toString('base64'),
+      isBase64Encoded: true,  // Critical for non-text content
+    };
+
   } catch (error) {
     console.error('Proxy error:', error);
-    return new Response(`Proxy error: ${error.message}`, {
-      status: 500,
-    });
+    return { statusCode: 500, body: `Proxy error: ${error.message}` };
   }
 };
