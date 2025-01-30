@@ -1,3 +1,4 @@
+// netlify/functions/framer-proxy.ts
 import { Handler } from '@netlify/functions';
 
 export const handler: Handler = async (event) => {
@@ -9,7 +10,7 @@ export const handler: Handler = async (event) => {
     const framerBase = 'https://charismatic-everyone-653587.framer.app';
 
     // Handle root path
-    const path = incomingUrl.pathname === '/' ? '/' : incomingUrl.pathname;
+    const path = incomingUrl.pathname === '/.netlify/functions/framer-proxy' ? '/' : incomingUrl.pathname;
 
     // Construct the Framer URL
     const framerUrl = new URL(path, framerBase);
