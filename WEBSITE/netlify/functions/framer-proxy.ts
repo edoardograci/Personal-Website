@@ -7,8 +7,11 @@ export const handler: Handler = async (event) => {
     const incomingUrl = new URL(event.rawUrl);
     const framerBase = 'https://charismatic-everyone-653587.framer.app';
 
+    // Handle root path
+    const path = incomingUrl.pathname === '/' ? '/' : incomingUrl.pathname;
+
     // Construct the Framer URL
-    const framerUrl = new URL(incomingUrl.pathname, framerBase);
+    const framerUrl = new URL(path, framerBase);
 
     // Log incoming requests for debugging
     console.log(`Incoming request: ${incomingUrl.href}`);
