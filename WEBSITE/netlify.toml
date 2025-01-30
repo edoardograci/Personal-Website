@@ -20,5 +20,3 @@
   to = "/.netlify/functions/framer-proxy"
   status = 200
   force = true
-  # Add this line to ensure the URL doesn't change in the browser
-  conditions = { Host = ["edoardograci.com"] }
