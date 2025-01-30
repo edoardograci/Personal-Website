@@ -10,8 +10,8 @@ export const handler = async (event) => {
     const framerUrl = new URL(cleanPath, framerBase);
 
     // Log incoming requests for debugging
-    console.log(Incoming request: ${incomingUrl.href});
-    console.log(Proxied to Framer: ${framerUrl.href});
+    console.log(`Incoming request: ${incomingUrl.href}`);
+    console.log(`Proxied to Framer: ${framerUrl.href}`);
 
     // Set headers to bypass Framer restrictions
     const headers = new Headers({
