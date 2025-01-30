@@ -5,7 +5,6 @@ export const handler = async (event) => {
     const proxyPrefix = '/.netlify/functions/framer-proxy';
     const cleanPath = incomingUrl.pathname.replace(proxyPrefix, '') || '/';
     const framerBase = 'https://charismatic-everyone-653587.framer.app';
-    const siteBase = 'https://edoardograci.com';
 
     // Construct the Framer URL
     const framerUrl = new URL(cleanPath, framerBase);
@@ -30,13 +29,13 @@ export const handler = async (event) => {
       headers,
       redirect: 'manual',
       method,
-      body: supportsBody ? event.body : undefined,
+      body: supportsBody ? event.body : undefined, // FIXED: Only send body if the method supports it
     });
 
     // Handle redirects manually
     if ([301, 302, 307, 308].includes(response.status)) {
       const location = response.headers.get('location');
-      const cleanLocation = location ? location.replace(framerBase, siteBase) : '';
+      const cleanLocation = location ? location.replace(framerBase, '') : '';
 
       return {
         statusCode: response.status,
@@ -58,9 +57,8 @@ export const handler = async (event) => {
         .replace(/<meta property="og:title"[^>]*>/gi, '<meta property="og:title" content="Edoardo Graci - Product Designer"/>')
         .replace(/<meta name="description"[^>]*>/gi, '<meta name="description" content="Product designer with a focus on digital products and user experience."/>')
         .replace(/<meta name="robots"[^>]*>/gi, '') // Remove the noindex tag
-        .replace(new RegExp(framerBase, 'g'), siteBase) // Replace all Framer base URLs with the clean site URL
-        .replace(/<script[^>]*src="https:\/\/events\.framer\.com\/script"[^>]*><\/script>/gi, '') // Remove the problematic script
-        .replace(new RegExp(proxyPrefix, 'g'), ''); // Clean any remaining proxy references
+        .replace(new RegExp(framerBase, 'g'), '') // Replace all Framer base URLs with the clean URL
+        .replace(/<script[^>]*src="https:\/\/events\.framer\.com\/script"[^>]*><\/script>/gi, ''); // Remove the problematic script
 
       return {
         statusCode: response.status,
