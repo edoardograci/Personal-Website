@@ -3,7 +3,9 @@ export const handler = async (event) => {
     // Parse the incoming request URL
     const incomingUrl = new URL(event.rawUrl);
     const proxyPrefix = '/.netlify/functions/framer-proxy';
-    const cleanPath = incomingUrl.pathname.replace(proxyPrefix, '') || '/';
+    const cleanPath = incomingUrl.pathname.startsWith(proxyPrefix)
+      ? incomingUrl.pathname.replace(proxyPrefix, '') || '/'
+      : incomingUrl.pathname;
     const framerBase = 'https://charismatic-everyone-653587.framer.app';
 
     // Construct the Framer URL
@@ -29,13 +31,13 @@ export const handler = async (event) => {
       headers,
       redirect: 'manual',
       method,
-      body: supportsBody ? event.body : undefined, // Only send body if the method supports it
+      body: supportsBody ? event.body : undefined,
     });
 
     // Handle redirects manually
     if ([301, 302, 307, 308].includes(response.status)) {
       const location = response.headers.get('location');
-      const cleanLocation = location ? location.replace(framerBase, '') : '';
+      const cleanLocation = location ? location.replace(framerBase, '/') : '/';
 
       return {
         statusCode: response.status,
@@ -54,27 +56,25 @@ export const handler = async (event) => {
       // Log robots meta before modification
       console.log("Found Robots Meta Tag BEFORE processing:", html.match(/<meta\s+name=["']robots["'][^>]*>/gi));
 
-      // 🔹 Modify the HTML to clean up unwanted elements
+      // Modify the HTML
       html = html
         .replace(/<title>[^<]*<\/title>/gi, '<title>Edoardo Graci - Product Designer</title>')
         .replace(/<meta property="og:title"[^>]*>/gi, '<meta property="og:title" content="Edoardo Graci - Product Designer"/>')
         .replace(/<meta name="description"[^>]*>/gi, '<meta name="description" content="Product designer with a focus on digital products and user experience."/>')
-        .replace(/<meta\s+name=["']robots["']\s+content=["'][^"']*["']\s*\/?>/gi, '') // 🔹 Remove robots meta tag
-        .replace(new RegExp(framerBase, 'g'), '') // 🔹 Replace all Framer base URLs
-        .replace(/<script[^>]*src="https:\/\/events\.framer\.com\/script"[^>]*><\/script>/gi, '') // 🔹 Remove Framer analytics script
-        .replace(/<script[^>]*>[^<]*robots[^<]*<\/script>/gi, ''); // 🔹 Remove scripts that manipulate robots meta tag
+        .replace(/<meta\s+name=["']robots["']\s+content=["'][^"']*["']\s*\/?>(?!<\/script>)/gi, '') // Remove robots meta tag
+        .replace(new RegExp(framerBase, 'g'), '/') // Replace all Framer base URLs with the clean URL
+        .replace(/<script[^>]*src="https:\/\/events\.framer\.com\/script"[^>]*><\/script>/gi, ''); // Remove the problematic script
 
       // Log robots meta after modification
       console.log("Found Robots Meta Tag AFTER processing:", html.match(/<meta\s+name=["']robots["'][^>]*>/gi));
 
-      // 🔹 Inject JavaScript to remove dynamically inserted <meta name="robots">
+      // Inject JavaScript to remove dynamically inserted <meta name="robots">
       html = html.replace('</body>', `
         <script>
           document.addEventListener('DOMContentLoaded', function () {
             const meta = document.querySelector('meta[name="robots"]');
-            if (meta) meta.remove(); // Remove it immediately
+            if (meta) meta.remove();
 
-            // Monitor for future injections (Framer might add it dynamically)
             const observer = new MutationObserver(() => {
               const injectedMeta = document.querySelector('meta[name="robots"]');
               if (injectedMeta) injectedMeta.remove();
