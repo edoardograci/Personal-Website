@@ -1,10 +1,6 @@
+# netlify.toml
 [build]
   publish = "WEBSITE/dist"
-
-# Primary edge function route
-[[edge_functions]]
-  path = "/*"
-  function = "framer-proxy"
 
 # Redirect assets directly from Framer
 [[redirects]]
@@ -13,13 +9,12 @@
   status = 200
   force = true
 
-# Allow direct access to static files (CSS, JS, images)
+# Allow direct access to static files
 [[redirects]]
   from = "/static/*"
   to = "/static/:splat"
   status = 200
 
-# Route everything else through the proxy WITHOUT showing the function path
 [[redirects]]
   from = "/*"
   to = "/.netlify/functions/framer-proxy"
