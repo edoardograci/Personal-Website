@@ -51,17 +51,21 @@ export const handler = async (event) => {
     if (contentType.includes('text/html')) {
       let html = await response.text();
 
+      // Extract and log the robots meta tag before modification
+      console.log("Found Robots Meta Tag BEFORE processing:", html.match(/<meta\s+name=["']robots["'][^>]*>/gi));
+
       // Modify the HTML
       html = html
         .replace(/<title>[^<]*<\/title>/gi, '<title>Edoardo Graci - Product Designer</title>')
         .replace(/<meta property="og:title"[^>]*>/gi, '<meta property="og:title" content="Edoardo Graci - Product Designer"/>')
         .replace(/<meta name="description"[^>]*>/gi, '<meta name="description" content="Product designer with a focus on digital products and user experience."/>')
-        .replace(/<meta\s+name=["']robots["'][^>]*>/gi, '')  // ✅ Improved robots meta removal
+        .replace(/<meta\s+name=["']robots["']\s+content=["'][^"']*["']\s*\/?>/gi, '') // ✅ Fixed robots meta removal
         .replace(new RegExp(framerBase, 'g'), '') 
         .replace(/<script[^>]*src="https:\/\/events\.framer\.com\/script"[^>]*><\/script>/gi, '') 
         .replace(/<script[^>]*>[^<]*robots[^<]*<\/script>/gi, ''); // ✅ Remove scripts injecting meta robots
 
-      console.log("Modified HTML:", html); // ✅ Debugging step
+      // Log robots meta tag after processing
+      console.log("Found Robots Meta Tag AFTER processing:", html.match(/<meta\s+name=["']robots["'][^>]*>/gi));
 
       return {
         statusCode: response.status,
