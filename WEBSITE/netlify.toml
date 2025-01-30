@@ -1,4 +1,3 @@
-# netlify.toml
 [build]
   publish = "WEBSITE/dist"
 
@@ -15,8 +14,11 @@
   to = "/static/:splat"
   status = 200
 
+# Route everything through the function without changing the URL
 [[redirects]]
   from = "/*"
   to = "/.netlify/functions/framer-proxy"
   status = 200
   force = true
+  # Add this line to ensure the URL doesn't change in the browser
+  conditions = { Host = ["edoardograci.com"] }
