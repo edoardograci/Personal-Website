@@ -17,6 +17,6 @@
 # Route everything through the function without changing the URL
 [[redirects]]
   from = "/*"
-  to = "/.netlify/functions/framer-proxy"
+  to = "/.netlify/functions/framer-proxy/:splat"
   status = 200
   force = true
