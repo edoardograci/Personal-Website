@@ -9,7 +9,7 @@ export const handler: Handler = async (event) => {
     const incomingUrl = new URL(event.rawUrl);
     const framerBase = 'https://charismatic-everyone-653587.framer.app';
 
-    // Get the original path (without function path)
+    // Extract the original path (e.g., "/about" instead of "/.netlify/functions/framer-proxy/about")
     const originalPath = incomingUrl.pathname;
 
     // Construct the Framer URL
