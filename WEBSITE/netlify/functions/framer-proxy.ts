@@ -9,11 +9,11 @@ export const handler: Handler = async (event) => {
     const incomingUrl = new URL(event.rawUrl);
     const framerBase = 'https://charismatic-everyone-653587.framer.app';
 
-    // Handle root path
-    const path = incomingUrl.pathname === '/.netlify/functions/framer-proxy' ? '/' : incomingUrl.pathname;
+    // Get the original path (without function path)
+    const originalPath = incomingUrl.pathname;
 
     // Construct the Framer URL
-    const framerUrl = new URL(path, framerBase);
+    const framerUrl = new URL(originalPath, framerBase);
 
     // Log incoming requests for debugging
     console.log(`Incoming request: ${incomingUrl.href}`);
