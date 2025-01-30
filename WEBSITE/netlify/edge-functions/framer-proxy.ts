@@ -81,7 +81,7 @@ export const handler = async (event) => {
     console.error('Proxy error:', error);
     return {
       statusCode: 500,
-      body: Proxy error: ${error.message},
+      body: `Proxy error: ${error.message}`,
     };
   }
 };
