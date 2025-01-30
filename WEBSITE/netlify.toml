@@ -1,11 +1,11 @@
 [build]
   publish = "WEBSITE/dist"
 
-  # Primary edge function route
+# Primary edge function route
 [[edge_functions]]
   path = "/*"
   function = "framer-proxy"
-  
+
 # Redirect assets directly from Framer
 [[redirects]]
   from = "/assets/*"
@@ -19,9 +19,9 @@
   to = "/static/:splat"
   status = 200
 
-# Route everything else through the proxy (EXCLUDING STATIC FILES)
+# Route everything else through the proxy WITHOUT showing the function path
 [[redirects]]
   from = "/*"
-  to = "/.netlify/functions/framer-proxy/:splat"
+  to = "/.netlify/functions/framer-proxy"
   status = 200
-  force = false
+  force = true
