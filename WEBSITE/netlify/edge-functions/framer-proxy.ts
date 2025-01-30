@@ -29,7 +29,7 @@ export const handler = async (event) => {
       headers,
       redirect: 'manual',
       method,
-      body: supportsBody ? event.body : undefined, // FIXED: Only send body if the method supports it
+      body: supportsBody ? event.body : undefined,
     });
 
     // Handle redirects manually
@@ -56,9 +56,12 @@ export const handler = async (event) => {
         .replace(/<title>[^<]*<\/title>/gi, '<title>Edoardo Graci - Product Designer</title>')
         .replace(/<meta property="og:title"[^>]*>/gi, '<meta property="og:title" content="Edoardo Graci - Product Designer"/>')
         .replace(/<meta name="description"[^>]*>/gi, '<meta name="description" content="Product designer with a focus on digital products and user experience."/>')
-        .replace(/<meta name="robots"[^>]*>/gi, '') // Remove the noindex tag
-        .replace(new RegExp(framerBase, 'g'), '') // Replace all Framer base URLs with the clean URL
-        .replace(/<script[^>]*src="https:\/\/events\.framer\.com\/script"[^>]*><\/script>/gi, ''); // Remove the problematic script
+        .replace(/<meta\s+name=["']robots["'][^>]*>/gi, '')  // ✅ Improved robots meta removal
+        .replace(new RegExp(framerBase, 'g'), '') 
+        .replace(/<script[^>]*src="https:\/\/events\.framer\.com\/script"[^>]*><\/script>/gi, '') 
+        .replace(/<script[^>]*>[^<]*robots[^<]*<\/script>/gi, ''); // ✅ Remove scripts injecting meta robots
+
+      console.log("Modified HTML:", html); // ✅ Debugging step
 
       return {
         statusCode: response.status,
