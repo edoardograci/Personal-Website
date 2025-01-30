@@ -29,7 +29,7 @@ export const handler = async (event) => {
       headers,
       redirect: 'manual',
       method,
-      body: supportsBody ? event.body : undefined, // FIXED: Only send body if the method supports it
+      body: supportsBody ? event.body : undefined, // Only send body if the method supports it
     });
 
     // Handle redirects manually
@@ -51,14 +51,39 @@ export const handler = async (event) => {
     if (contentType.includes('text/html')) {
       let html = await response.text();
 
-      // Modify the HTML
+      // Log robots meta before modification
+      console.log("Found Robots Meta Tag BEFORE processing:", html.match(/<meta\s+name=["']robots["'][^>]*>/gi));
+
+      // 🔹 Modify the HTML to clean up unwanted elements
       html = html
         .replace(/<title>[^<]*<\/title>/gi, '<title>Edoardo Graci - Product Designer</title>')
         .replace(/<meta property="og:title"[^>]*>/gi, '<meta property="og:title" content="Edoardo Graci - Product Designer"/>')
         .replace(/<meta name="description"[^>]*>/gi, '<meta name="description" content="Product designer with a focus on digital products and user experience."/>')
-        .replace(/<meta name="robots"[^>]*>/gi, '') // Remove the noindex tag
-        .replace(new RegExp(framerBase, 'g'), '') // Replace all Framer base URLs with the clean URL
-        .replace(/<script[^>]*src="https:\/\/events\.framer\.com\/script"[^>]*><\/script>/gi, ''); // Remove the problematic script
+        .replace(/<meta\s+name=["']robots["']\s+content=["'][^"']*["']\s*\/?>/gi, '') // 🔹 Remove robots meta tag
+        .replace(new RegExp(framerBase, 'g'), '') // 🔹 Replace all Framer base URLs
+        .replace(/<script[^>]*src="https:\/\/events\.framer\.com\/script"[^>]*><\/script>/gi, '') // 🔹 Remove Framer analytics script
+        .replace(/<script[^>]*>[^<]*robots[^<]*<\/script>/gi, ''); // 🔹 Remove scripts that manipulate robots meta tag
+
+      // Log robots meta after modification
+      console.log("Found Robots Meta Tag AFTER processing:", html.match(/<meta\s+name=["']robots["'][^>]*>/gi));
+
+      // 🔹 Inject JavaScript to remove dynamically inserted <meta name="robots">
+      html = html.replace('</body>', `
+        <script>
+          document.addEventListener('DOMContentLoaded', function () {
+            const meta = document.querySelector('meta[name="robots"]');
+            if (meta) meta.remove(); // Remove it immediately
+
+            // Monitor for future injections (Framer might add it dynamically)
+            const observer = new MutationObserver(() => {
+              const injectedMeta = document.querySelector('meta[name="robots"]');
+              if (injectedMeta) injectedMeta.remove();
+            });
+
+            observer.observe(document.head, { childList: true, subtree: true });
+          });
+        </script>
+      </body>`);
 
       return {
         statusCode: response.status,
