@@ -1,6 +1,8 @@
 import { Handler } from '@netlify/functions';
 
 export const handler: Handler = async (event) => {
+  console.log("Function invoked with event:", JSON.stringify(event, null, 2));
+
   try {
     // Parse the incoming request URL
     const incomingUrl = new URL(event.rawUrl);
