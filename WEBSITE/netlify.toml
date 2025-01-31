@@ -1,23 +1,22 @@
 [build]
   publish = "WEBSITE/dist"
 
-# Set up a subdomain proxy
-[[redirects]]
-  from = "https://proxy.edoardograci.com/*"
-  to = "/.netlify/functions/framer-proxy/:splat"
-  status = 200
-  force = true
-
-# Main domain redirects to proxy
-[[redirects]]
-  from = "https://edoardograci.com/*"
-  to = "https://proxy.edoardograci.com/:splat"
-  status = 200
-  force = true
-
-# Keep asset redirects
+# Redirect assets directly from Framer
 [[redirects]]
   from = "/assets/*"
   to = "https://charismatic-everyone-653587.framer.app/assets/:splat"
+  status = 200
+  force = true
+
+# Allow direct access to static files
+[[redirects]]
+  from = "/static/*"
+  to = "/static/:splat"
+  status = 200
+
+# Route everything through the function without changing the URL
+[[redirects]]
+  from = "/*"
+  to = "/.netlify/functions/framer-proxy/:splat"
   status = 200
   force = true
