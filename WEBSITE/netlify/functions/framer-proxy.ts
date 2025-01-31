@@ -2,16 +2,10 @@ export const handler = async (event) => {
   try {
     // Parse the incoming request URL
     const incomingUrl = new URL(event.rawUrl);
-    const proxyPrefix = '/.netlify/functions/framer-proxy';
     const framerBase = 'https://charismatic-everyone-653587.framer.app';
 
-    // Ensure the path does not include the proxy prefix
-    const cleanPath = incomingUrl.pathname.startsWith(proxyPrefix)
-      ? incomingUrl.pathname.replace(proxyPrefix, '') || '/'
-      : incomingUrl.pathname;
-
-    // Construct the Framer URL
-    const framerUrl = new URL(cleanPath, framerBase);
+    // Construct the Framer URL directly from the incoming path
+    const framerUrl = new URL(incomingUrl.pathname, framerBase);
 
     // Log incoming requests for debugging
     console.log(`Incoming request: ${incomingUrl.href}`);
