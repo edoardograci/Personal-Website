@@ -1,0 +1,8 @@
+# Handle the root path
+/    /.netlify/functions/framer-proxy    200!
+
+# Handle all other paths with splat
+/*    /.netlify/functions/framer-proxy/:splat    200!
+
+# Handle assets directly
+/assets/*    https://charismatic-everyone-653587.framer.app/assets/:splat    200!
