@@ -81,6 +81,7 @@ export const handler = async (event) => {
           'Content-Type': 'text/html; charset=UTF-8',
           'X-Robots-Tag': 'index, follow',
           'Cache-Control': 'public, max-age=3600',
+          'Permissions-Policy': 'interest-cohort=()', // Suppress browsing-topics error
         },
         body: html,
       };
