@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /work/work
+Disallow: /work/*
+Disallow: /*/work
+Disallow: /private/
+Disallow: /admin/
+Disallow: /framer-app/  # Block Framer proxy path if used
+
+Sitemap: https://edoardograci.com/sitemap.xml
