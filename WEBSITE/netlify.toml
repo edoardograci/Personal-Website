@@ -1,26 +1,22 @@
 [build]
   publish = "WEBSITE/dist"
 
-[edge_functions]
-  "*" = "/netlify/edge-handlers/transform.js"
-
-# Handle all assets directly from Framer
+# Redirect assets directly from Framer
 [[redirects]]
-  from = "https://edoardograci.com/*"
-  to = "https://charismatic-everyone-653587.framer.app/:splat"
+  from = "/assets/*"
+  to = "https://charismatic-everyone-653587.framer.app/assets/:splat"
   status = 200
   force = true
-  headers = {X-From = "Netlify", X-Robots-Tag = "index, follow"}
 
-# Remove Framer analytics script
-[[headers]]
-  for = "/*"
-  [headers.values]
-    Content-Security-Policy = "script-src 'self' 'unsafe-inline' 'unsafe-eval'; frame-src 'self'"
+# Allow direct access to static files
+[[redirects]]
+  from = "/static/*"
+  to = "/static/:splat"
+  status = 200
 
-# Fallback redirect
+# Route everything through the function without changing the URL
 [[redirects]]
   from = "/*"
-  to = "https://charismatic-everyone-653587.framer.app/:splat"
+  to = "/.netlify/functions/framer-proxy/:splat"
   status = 200
   force = true
