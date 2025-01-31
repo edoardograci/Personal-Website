@@ -1,22 +1,23 @@
 [build]
   publish = "WEBSITE/dist"
 
-# Redirect assets directly from Framer
+# Handle all assets directly from Framer
 [[redirects]]
-  from = "/assets/*"
-  to = "https://charismatic-everyone-653587.framer.app/assets/:splat"
+  from = "https://edoardograci.com/*"
+  to = "https://charismatic-everyone-653587.framer.app/:splat"
   status = 200
   force = true
+  headers = {X-From = "Netlify", X-Robots-Tag = "index, follow"}
 
-# Allow direct access to static files
-[[redirects]]
-  from = "/static/*"
-  to = "/static/:splat"
-  status = 200
+# Remove Framer analytics script
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Content-Security-Policy = "script-src 'self' 'unsafe-inline' 'unsafe-eval'; frame-src 'self'"
 
-# Route everything through the function without changing the URL
+# Fallback redirect
 [[redirects]]
   from = "/*"
-  to = "/.netlify/functions/framer-proxy"  # Removed `:splat` to keep the URL clean
+  to = "https://charismatic-everyone-653587.framer.app/:splat"
   status = 200
   force = true
