@@ -1,3 +1,9 @@
+# Serve robots.txt directly
+/robots.txt    /robots.txt    200
+
+# Serve sitemap.xml directly
+/sitemap.xml    /sitemap.xml    200
+
 # Handle the root path
 /    /.netlify/functions/framer-proxy    200!
 
