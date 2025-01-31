@@ -1,6 +1,9 @@
 [build]
   publish = "WEBSITE/dist"
 
+[edge_functions]
+  "*" = "/netlify/edge-handlers/transform.js"
+
 # Handle all assets directly from Framer
 [[redirects]]
   from = "https://edoardograci.com/*"
