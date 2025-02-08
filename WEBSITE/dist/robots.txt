@@ -1,7 +1,6 @@
 User-agent: *
 Allow: /
 Disallow: /work/work
-Disallow: /work/*
 Disallow: /*/work
 Disallow: /private/
 Disallow: /admin/
