@@ -57,9 +57,9 @@ export const handler = async (event) => {
 
       // Modify the HTML
       html = html
-        .replace(/<title>[^<]*<\/title>/gi, '<title>Edoardo Graci - Product Designer</title>')
-        .replace(/<meta property="og:title"[^>]*>/gi, '<meta property="og:title" content="Edoardo Graci - Product Designer"/>')
-        .replace(/<meta name="description"[^>]*>/gi, '<meta name="description" content="Product designer with a focus on digital products and user experience."/>')
+        .replace(/<title>[^<]*<\/title>/gi, '<title>Edoardo Graci - Industrial Designer</title>')
+        .replace(/<meta property="og:title"[^>]*>/gi, '<meta property="og:title" content="Edoardo Graci - Industrial Designer"/>')
+        .replace(/<meta name="description"[^>]*>/gi, '<meta name="description" content="Edoardo Graci Studio is a creative studio based in Milan, Italy, founded in 2025. The studio serves as an archive of products that reflect his evolution as an industrial designer over the years."/>')
         .replace(/<meta\s+name=["']robots["']\s+content=["'][^"']*["']\s*\/?>/gi, '') // Remove robots meta tag
         .replace(new RegExp(framerBase, 'g'), '/') // Replace all Framer base URLs with the clean URL
         .replace(/<script[^>]*src="https:\/\/events\.framer\.com\/script"[^>]*><\/script>/gi, ''); // Remove the problematic script
