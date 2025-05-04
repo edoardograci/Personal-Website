@@ -64,7 +64,7 @@ export const handler = async (event) => {
         .replace(new RegExp(framerBase, 'g'), '/') // Replace all Framer base URLs with the clean URL
         .replace(/<script[^>]*src="https:\/\/events\.framer\.com\/script"[^>]*><\/script>/gi, ''); // Remove the problematic script
 
-      // Inject JavaScript to remove dynamically inserted <meta name="robots">
+      // Inject MutationObserver and analytics script
       html = html.replace('</body>', `
         <script>
           document.addEventListener('DOMContentLoaded', function () {
@@ -79,6 +79,8 @@ export const handler = async (event) => {
             observer.observe(document.head, { childList: true, subtree: true });
           });
         </script>
+        <!-- 100% privacy-first analytics -->
+        <script async src="https://scripts.simpleanalyticscdn.com/latest.js"></script>
       </body>`);
 
       return {
